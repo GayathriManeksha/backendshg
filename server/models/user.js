@@ -1,8 +1,7 @@
-
-
 const mongoose=require('mongoose')
 const userSchema= new mongoose.Schema({
     name: String,
+    id:String,
     isinvited: {
         type: Number,
         enum: [0, 1, 2],
