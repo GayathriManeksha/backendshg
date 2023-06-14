@@ -2,17 +2,13 @@ const mongoose = require('mongoose');
 
 
 const announcementSchema = new mongoose.Schema({
-  unit: {
-    type:mongoose.Schema.Types.ObjectId,
-    ref: 'Unit',
-    required: true
-  },
   createdAt: {
     type: Date,
     default: Date.now
   },
   senderId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   message: {
@@ -21,6 +17,6 @@ const announcementSchema = new mongoose.Schema({
   }
 });
 
-const Announcement = mongoose.model('Announcement', announcementSchema);
+// const Announcement = mongoose.model('Announcement', announcementSchema);
 
-module.exports = Announcement;
+module.exports = announcementSchema;
