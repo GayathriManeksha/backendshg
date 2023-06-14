@@ -187,11 +187,24 @@ app.get('/attendance/:userId/:date', async (req, res) => {
       return attendanceDate === targetDate;
     });
 
+    const Allusers = await User.find({ unit: user.unit._id });
     if (!attendanceEntry) {
-      return res.json({ status: false, error: 'Attendance data not found for the specified date' });
+      // Create an object for each present user with name, id, and flag representing presence
+      const attendanceUsers = Allusers.map(user => ({
+        name: user.name,
+        id: user.id,
+        present: 0,
+      }));
+
+      // Modify the attendanceEntry to include the present users with flags
+      const attendanceEntryWithNamesAndIds = {
+        date: date,
+        presentUsers: attendanceUsers,
+      };
+      // return res.json({ status: false, error: 'Attendance data not found for the specified date' });
+      return res.json(attendanceEntryWithNamesAndIds);
     }
 
-   const Allusers= await User.find({unit:user.unit._id});
     // Create an object for each present user with name, id, and flag representing presence
     const attendanceUsers = Allusers.map(user => ({
       name: user.name,
@@ -215,65 +228,71 @@ app.get('/attendance/:userId/:date', async (req, res) => {
 
 app.post('/attendance', async (req, res) => {
   try {
-    const unitId = req.body.unitId;
-    const unit = await Unit.findById(unitId);
-    const presentUserIds = req.body.presentUserIds;
-    const currentDate = new Date().toISOString().split('T')[0]; // Get the current date with no time component
+    const userId = req.body.id;
+    const user = await User.findOne({ id: userId }).populate('unit');
 
-    console.log(unit);
-    if (unit.attendance === null) {
-      unit.attendance = [];
+    if (!user) {
+      return res.json({ status: false, error: 'User not found' });
     }
 
-    const existingAttendance = unit.attendance.find((attendance) => {
+    const unit = user.unit;
+    const currentDate = req.body.date; // Get the current date from the request body
+    const presentUsers = req.body.presentUsers;
+
+    console.log(unit);
+
+    if (!unit) {
+      return res.status(404).json({ error: 'Unit not found' });
+    }
+
+    let existingAttendance = unit.attendance.find((attendance) => {
       const attendanceDate = new Date(attendance.date).toISOString().split('T')[0];
       return attendanceDate === currentDate;
     });
 
-    if (existingAttendance) {
-      // Remove absent users from the existing attendance record
-      existingAttendance.users = existingAttendance.users.filter((userId) =>
-        presentUserIds.includes(userId)
-      );
+    // Create an object to store the updated attendance
+    const updatedAttendance = {
+      date: new Date(currentDate),
+      users: []
+    };
 
-      // Add present users to the attendance record
-      existingAttendance.users.push(...presentUserIds);
+    // Iterate over the presentUsers array and update the attendance accordingly
+    for (const user of presentUsers) {
+      const { name, id, present } = user;
 
-      // Save the updated attendance record
-      unit.save()
-        .then((updatedUnit) => {
-          console.log('Attendance record updated:', updatedUnit.attendance);
-          res.status(200).json({ message: 'Attendance updated successfully.' });
-        })
-        .catch((error) => {
-          console.error('Error updating attendance record:', error);
-          res.status(500).json({ error: 'Error updating attendance record.' });
-        });
-    } else {
-      // Create a new attendance record for the present date
-      const newAttendance = {
-        date: currentDate,
-        presentUsers: presentUserIds,
-      };
+      // Find the user based on the provided ID
+      const foundUser = await User.findOne({ id: id });
 
-      unit.attendance.push(newAttendance);
+      if (!foundUser) {
+        return res.status(404).json({ error: `User with ID ${id} not found` });
+      }
 
-      // Save the updated unit document
-      unit.save()
-        .then((updatedUnit) => {
-          console.log('Attendance record saved:', updatedUnit.attendance);
-          res.status(200).json({ message: 'Attendance saved successfully.' });
-        })
-        .catch((error) => {
-          console.error('Error saving attendance record:', error);
-          res.status(500).json({ error: 'Error saving attendance record.' });
-        });
+      // If present is 1, add the user to the updatedAttendance
+      if (present === 1) {
+        updatedAttendance.users.push(foundUser._id);
+      }
+      // // If present is 0, remove the user from the updatedAttendance
+      // else if (present === 0) {
+      //   console.log(foundUser._id);
+      //   updatedAttendance.users = updatedAttendance.users.filter(u => !u._id.equals(foundUser._id));
+      // }
     }
+    console.log(updatedAttendance)
+    if (existingAttendance) {
+      existingAttendance.users = updatedAttendance.users;
+    }
+    // Update the attendance array in the unit
+    else { unit.attendance.push(updatedAttendance); }
+    await unit.save();
+
+    res.status(200).json({ message: 'Attendance updated successfully' });
   } catch (error) {
-    console.error('Error finding attendance record:', error);
-    res.status(500).json({ error: 'Error finding attendance record.' });
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while updating attendance' });
   }
 });
+
+
 
 
 app.get('/users/:userId/invited', async (req, res) => {

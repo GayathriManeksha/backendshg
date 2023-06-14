@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const User = require('./user');
 const announcementSchema = require('./announcement');
 const attendanceSchema = require('./attendance');
+const ProposalSchema = require('./proposal');
 
 const unitSchema = new mongoose.Schema({
   name: String,
@@ -13,7 +14,7 @@ const unitSchema = new mongoose.Schema({
   }],
   attendance: { type: [attendanceSchema] }, // Embedding Attendance schema
   announcements:{type: [announcementSchema]}, // Embedding Announcement schema
-  // proposals: [ProposalSchema], // Embedding Proposal schema
+  proposals: [ProposalSchema], // Embedding Proposal schema
   admin:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
