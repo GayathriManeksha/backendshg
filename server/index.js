@@ -10,6 +10,7 @@ const attendanceRouter=require('./routes/attendance')
 const unitRouter=require('./routes/units')
 const loginRouter=require('./routes/login')
 const proposalRouter=require('./routes/proposal')
+const paymentRouter=require('./routes/payment')
 
 const cors = require("cors");
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use("/", attendanceRouter);
 app.use("/", unitRouter)
 app.use("/", loginRouter)
 app.use("/",proposalRouter)
+app.use("/",paymentRouter)
 
 mongoose.connect(process.env.url);
 

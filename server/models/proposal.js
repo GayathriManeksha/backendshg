@@ -8,6 +8,7 @@ const proposalSchema = new mongoose.Schema({
     approved: Boolean,
     typeproposal: String,
     toapprove: mongoose.Schema.Types.ObjectId,
+    datecreated:Date,
 });
 
 module.exports = proposalSchema;

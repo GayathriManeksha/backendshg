@@ -45,31 +45,32 @@ router.get('/proposals/:userId/not-voted', async (req, res) => {
 // Endpoint for creating a new proposal
 router.post('/createproposals', async (req, res) => {
     try {
-        const { userId, description, typeprop } = req.body;
+        const { userId, description, typeprop, propid } = req.body;
         const user = await User.findOne({ id: userId }).populate('unit');
         if (!user) {
             return res.json({ status: false, error: 'User not found' });
         }
         const unit = user.unit;
-        console.log(req.body);
+        // console.log(req.body);
 
+        // const existingProposal = unit.proposals.find(proposal => proposal.toapprove.toString() === propid.toString())
+
+        // if(existingProposal)
+        // {
+        //     return res.status(400).json({error:"Proposal already created"})
+        // }
         // Create a new proposal
-        const proposal = new Proposal({
+        const proposal = {
             description,
             votes: 0,
             approved: false,
             typeproposal: typeprop,
-        });
-
+            toapprove: propid,
+            datecreated: new Date(),
+        };
         // Save the proposal to the database
         unit.proposals.push(proposal);
         await unit.save();
-
-        // Send proposal notification to all users (you can use a notification service for this)
-        // const users = await User.find(); // Assuming User model exists with appropriate fields
-        // users.forEach(user => {
-        //     sendNotification(user.email, 'New Proposal', 'A new proposal requires your vote.');
-        // });
 
         res.status(201).json(proposal);
     } catch (error) {
@@ -78,10 +79,9 @@ router.post('/createproposals', async (req, res) => {
 });
 
 // Endpoint for voting on a proposal
-router.post('/proposals/:id/vote', async (req, res) => {
+router.post('/proposals/vote', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { userId, vote } = req.body;
+        const { id, userId, vote } = req.body;
         console.log({ userId, vote, id })
 
         const user = await User.findOne({ id: userId }).populate('unit');
@@ -89,27 +89,37 @@ router.post('/proposals/:id/vote', async (req, res) => {
             return res.json({ status: false, error: 'User not found' });
         }
         const unit = user.unit;
+        if (!unit) {
+            return res.status(404).json({ error: 'Unit not found' });
+        }
 
+        console.log(id)
         // Check if the user has already voted for this proposal
-        const existingVote = await unit.voterecords.findOne({ userId, ProposalId: id });
+        const existingVote = await unit.voterecords.find(vote => vote.ProposalId.toString() === id.toString() &&
+            vote.userId.toString() === user._id.toString()
+        );
+        console.log(existingVote)
 
         if (existingVote) {
-            res.status(400).json({ error: 'You have already voted for this proposal.' });
-            return;
+            return res.status(400).json({ error: 'You have already voted for this proposal.' });
         }
 
         // Increment the votes for the proposal
         if (vote === 1) {
             console.log("Voted yaay");
-            await unit.proposals.updateOne({ _id: id }, { $inc: { votes: 1 } });
+            await Unit.updateOne(
+                { _id: unit._id, 'proposals._id': id },
+                { $inc: { 'proposals.$.votes': 1 } }
+            );
+            console.log("Voted yaayyy");
         }
 
         // Create a new vote record
-        const voteR = new Voterecord({ //1,0,-1
-            userId,
+        const voteR = { //1,0,-1
+            userId: user._id,
             ProposalId: id,
             poll: vote,
-        });
+        };
         unit.voterecords.push(voteR);
         // Save the vote record to the database
         await unit.save();
@@ -121,10 +131,9 @@ router.post('/proposals/:id/vote', async (req, res) => {
 });
 
 // Endpoint for calculating the winner and recording the result
-router.post('/proposals/:id/record', async (req, res) => {
+router.post('/proposals/record', async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.body;
+        const { id, userId } = req.body;
         const user = await User.findOne({ id: userId }).populate('unit');
         if (!user) {
             return res.json({ status: false, error: 'User not found' });
@@ -132,22 +141,21 @@ router.post('/proposals/:id/record', async (req, res) => {
         const unit = user.unit;
 
         // Get the proposal by its ID
-        const proposal = await unit.proposals.findById(id);
+        const proposal = unit.proposals.find((p) => p._id.toString() === id.toString());
+        console.log(proposal)
 
         if (!proposal) {
-            res.status(404).json({ error: 'Proposal not found.' });
-            return;
+            return res.status(404).json({ error: 'Proposal not found.' });
         }
 
         // Check if the proposal has already been approved
         if (proposal.approved) {
-            res.status(400).json({ error: 'The proposal has already been approved.' });
-            return;
+            return res.status(400).json({ error: 'The proposal has already been approved.' });
         }
 
         // Get the total number of votes for the proposal
         // const totalVotes = await Voterecord.countDocuments({ proposalId: id });
-        const totalVotes = await User.countDocuments();
+        const totalVotes = unit.members.length;
 
         // Calculate the majority threshold (e.g., 50% + 1 vote)
         const majorityThreshold = Math.ceil(totalVotes / 2);
@@ -155,7 +163,10 @@ router.post('/proposals/:id/record', async (req, res) => {
         // Check if the proposal has received the majority of votes
         if (proposal.votes >= majorityThreshold) {
             // Update the proposal as approved
-            await unit.proposals.updateOne({ _id: id }, { $set: { approved: true } });
+            await Unit.updateOne(
+                { _id: unit._id, 'proposals._id': id },
+                { $set: { 'proposals.$.approved': true } }
+            );
 
             // Perform other actions if needed
 
@@ -168,4 +179,4 @@ router.post('/proposals/:id/record', async (req, res) => {
     }
 });
 
-module.exports=router
+module.exports = router

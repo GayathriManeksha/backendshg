@@ -7,14 +7,15 @@ const paymentSchema = new mongoose.Schema({
     },
     date: {
         type: Date,
-        required: true
     },
     amount: {
-        type: Date,
-        required: true
+        type: Number,
+        required: true,
     },
     approved: {
         type: Boolean,
         default: false,
     }
 })
+
+module.exports = paymentSchema
