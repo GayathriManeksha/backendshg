@@ -377,6 +377,9 @@ app.get('/users/:id/hasAdminAccess', async (req, res) => {
   }
 });
 
+app.post('/addusers', async (req, res) => {
+  const userId = req.body.id;
+})
 app.listen(3005, () => {
   console.log('Server started on port 3005');
 });

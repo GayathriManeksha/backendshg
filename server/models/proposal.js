@@ -7,6 +7,7 @@ const proposalSchema = new mongoose.Schema({
     votes: Number,
     approved: Boolean,
     typeproposal: String,
+    toapprove: mongoose.Schema.Types.ObjectId,
 });
 
 module.exports = proposalSchema;
