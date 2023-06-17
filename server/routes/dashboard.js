@@ -8,7 +8,7 @@ router.get('/dashboard/:userId', async (req, res) => {
       const userId = req.params.userId;
   
       // Fetch the member's data based on the memberId
-      const user = await User.findOne(userId).populate('unit');
+      const user = await User.findOne({id:userId}).populate('unit');
   
       if (!user) {
         return res.status(404).json({ message: 'Member not found' });

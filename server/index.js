@@ -11,6 +11,8 @@ const unitRouter=require('./routes/units')
 const loginRouter=require('./routes/login')
 const proposalRouter=require('./routes/proposal')
 const paymentRouter=require('./routes/payment')
+const dashboardRouter=require('./routes/dashboard')
+const membersRouter=require('./routes/memlist')
 
 const cors = require("cors");
 app.use(express.json());
@@ -22,6 +24,9 @@ app.use("/", unitRouter)
 app.use("/", loginRouter)
 app.use("/",proposalRouter)
 app.use("/",paymentRouter)
+app.use("/",dashboardRouter)
+app.use("/",membersRouter)
+
 
 mongoose.connect(process.env.url);
 
