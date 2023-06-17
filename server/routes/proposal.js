@@ -30,11 +30,15 @@ router.get('/proposals/:userId/not-voted', async (req, res) => {
         }
         const unit = user.unit;
 
-        // Find all proposal IDs the user has voted on // UserId is reference here
-        const votedProposalIds = await unit.voterecords.find({ userId: userId }).distinct('ProposalId');
+        // Find all proposal IDs the user has voted on
+        const votedProposalIds = unit.voterecords
+            .filter((vote) => vote.userId.toString() === user._id.toString())
+            .map((vote) => vote.ProposalId.toString());
+
+        console.log(votedProposalIds)
 
         // Find all proposals that the user has not voted on yet
-        const proposals = await unit.proposals.find({ _id: { $nin: votedProposalIds } });
+        const proposals = unit.proposals.filter((proposal) => !votedProposalIds.includes(proposal._id.toString()));
 
         res.json(proposals);
     } catch (error) {
