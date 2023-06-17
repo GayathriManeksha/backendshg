@@ -36,8 +36,9 @@ router.post('/makepayment', async (req, res) => {
 
         unit.payments.push(newpayment);
         await unit.save();
-        console.log("Saved successfully")
-        return res.json({ status: true });
+        const paymentId = unit.payments[unit.payments.length - 1]._id;
+        console.log("Saved successfully",paymentId)
+        return res.json({ status: true, paymentId });
     }
     catch (error) {
         console.log("error")
