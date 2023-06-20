@@ -39,8 +39,12 @@ router.get('/proposals/:userId/not-voted', async (req, res) => {
 
         // Find all proposals that the user has not voted on yet
         const proposals = unit.proposals.filter((proposal) => !votedProposalIds.includes(proposal._id.toString()));
+        const filteredProposals = proposals.map((proposal) => ({
+            description: proposal.description,
+            _id: proposal._id,
+        }));
 
-        res.json(proposals);
+        res.json(filteredProposals);
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
     }
