@@ -8,10 +8,10 @@ const mongoose = require('mongoose');
 
 router.post('/announcements', async (req, res) => {
   try {
-    const { uid, message } = req.body;
+    const { id, message } = req.body;
     
 
-    const user = await User.findOne({ id: uid }).populate('unit');
+    const user = await User.findOne({ id}).populate('unit');
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
