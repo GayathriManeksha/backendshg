@@ -36,8 +36,29 @@ router.post('/makepayment', async (req, res) => {
 
         unit.payments.push(newpayment);
         await unit.save();
-        console.log("Saved successfully")
-        return res.json({ status: true });
+
+        const paymentId = unit.payments[unit.payments.length - 1]._id;
+        console.log("Saved successfully", paymentId)
+
+        const desc = `${user2.name} paid ${amt}`;
+        console.log(desc)
+
+        const proposal = {
+            description: desc,
+            votes: 0,
+            approved: false,
+            typeproposal: 'Payment',
+            toapprove: paymentId,
+            datecreated: new Date(),
+        };
+
+        console.log(proposal)
+        // Save the proposal to the database
+        unit.proposals.push(proposal);
+        await unit.save();
+
+        res.status(201).json(proposal);
+        // return res.json({ status: true, paymentId });
     }
     catch (error) {
         console.log("error")
