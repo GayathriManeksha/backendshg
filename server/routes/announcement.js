@@ -43,11 +43,11 @@ router.post('/announcements', async (req, res) => {
   }
 });
 
-router.post('/getannouncements', async (req, res) => {
+router.get('/announcements/:id', async (req, res) => {
   try {
     //const { uid } = req.params.id;
-    
-    const uid = req.body.id;
+    const { id } = req.params;
+    const uid = id;
 
     console.log(uid)
     const user = await User.findOne({ id: uid }).populate('unit');
