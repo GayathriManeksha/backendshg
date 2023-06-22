@@ -95,10 +95,10 @@ router.post('/listpayment', async (req, res) => {
                     date: p.date.toISOString().split('T')[0],
                     amount: p.amount,
                 }))
-                : {
+                : [{
                     date: paymentslist.date.toISOString().split('T')[0],
                     amount: paymentslist.amount,
-                };
+                }];
 
             console.log(filteredpayments)
             return res.json(filteredpayments)
