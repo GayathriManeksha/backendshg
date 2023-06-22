@@ -178,6 +178,17 @@ router.post('/proposals/record', async (req, res) => {
 
             // Perform other actions if needed
 
+            if (proposal.typeproposal === "Payment") {
+                console.log(proposal.toapprove.toString())
+                console.log("you")
+                const approved_payment = unit.payments.find((p) => p._id.toString() === proposal.toapprove.toString());
+                console.log(approved_payment)
+                await Unit.updateOne(
+                    { _id: unit._id, 'payments._id': approved_payment._id },
+                    { $set: { 'payments.$.approved': true } }
+                );
+            }
+
             res.status(200).json({ message: 'Proposal approved and recorded successfully.' });
         } else {
             res.status(200).json({ message: 'Proposal did not receive the required majority of votes.' });
