@@ -3,12 +3,12 @@ const router = express.Router();
 const Unit = require('../models/unit');
 const User = require('../models/user');
 
-router.get('/dashboard/:userId', async (req, res) => {
+router.get('/dashboard/:id', async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const id = req.params.id;
   
       // Fetch the member's data based on the memberId
-      const user = await User.findOne({id:userId}).populate('unit');
+      const user = await User.findOne({id:id}).populate('unit');
   
       if (!user) {
         return res.status(404).json({ message: 'Member not found' });

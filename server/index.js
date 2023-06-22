@@ -13,6 +13,7 @@ const proposalRouter=require('./routes/proposal')
 const paymentRouter=require('./routes/payment')
 const dashboardRouter=require('./routes/dashboard')
 const membersRouter=require('./routes/memlist')
+const announcementRouter=require('./routes/announcement')
 
 const cors = require("cors");
 app.use(express.json());
@@ -26,8 +27,10 @@ app.use("/",proposalRouter)
 app.use("/",paymentRouter)
 app.use("/",dashboardRouter)
 app.use("/",membersRouter)
+app.use("/",announcementRouter)
 
 
+//console.log(process.env.url)
 mongoose.connect(process.env.url);
 
 app.listen(3005, () => {
