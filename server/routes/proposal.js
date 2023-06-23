@@ -53,7 +53,7 @@ router.get('/proposals/:userId/not-voted', async (req, res) => {
 // Endpoint for creating a new proposal
 router.post('/createproposals', async (req, res) => {
     try {
-        const { userId, description, typeprop, propid } = req.body;
+        const { userId, name, amount, typeprop, propid } = req.body;
         const user = await User.findOne({ id: userId }).populate('unit');
         if (!user) {
             return res.json({ status: false, error: 'User not found' });
@@ -71,6 +71,7 @@ router.post('/createproposals', async (req, res) => {
         const proposal = {
             description,
             votes: 0,
+            totalVotes: 0,
             approved: false,
             typeproposal: typeprop,
             toapprove: propid,
@@ -272,4 +273,54 @@ router.post('/proposals/disapproved', async (req, res) => {
         res.json({ error: "Error" });
     }
 });
+
+router.post('/deleteproposal', async (req, res) => {
+    const userId = req.body.userId;
+    const description = req.body.description;
+    const proposalId = req.body.proposalId;
+
+    try {
+        // Find the user and populate the 'unit' field
+        const user = await User.findOne({ id: userId }).populate('unit');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Find the unit associated with the user
+        const unit = user.unit;
+
+        if (!unit) {
+            return res.status(404).json({ message: 'Unit not found or user is not the admin' });
+        }
+
+        // Find the proposal within the unit and update/delete it
+        const proposalIndex = unit.proposals.findIndex((proposal) => proposal._id.toString() === proposalId);
+
+        if (proposalIndex === -1) {
+            return res.status(404).json({ message: 'Proposal not found' });
+        }
+        const newProposal = {
+            description,
+            votes: 0,
+            totalVotes: 0,
+            approved: false,
+            typeproposal: typeprop,
+            toapprove: propid,
+            datecreated: new Date(),
+        };
+
+        unit.proposals.splice(proposalIndex, 1);
+
+
+        // Save the updated unit
+        await unit.save();
+
+        res.status(200).json({ message: 'Proposal updated/deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'An error occurred' });
+    }
+});
+
 module.exports = router

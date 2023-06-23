@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 // Proposal schema
 const proposalSchema = new mongoose.Schema({
-    description: String,
+    description: { name: String, amount: String },
     votes: Number,
     totalVotes: Number,
     approved: Boolean,

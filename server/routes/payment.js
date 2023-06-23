@@ -40,12 +40,14 @@ router.post('/makepayment', async (req, res) => {
         const paymentId = unit.payments[unit.payments.length - 1]._id;
         console.log("Saved successfully", paymentId)
 
-        const desc = `${user2.name} paid ${amt}`;
+        // const desc = `${user2.name} paid ${amt}`;
+        const desc = { name: user2.name, amount: amt }
         console.log(desc)
 
         const proposal = {
             description: desc,
             votes: 0,
+            totalVotes: 0,
             approved: false,
             typeproposal: 'Payment',
             toapprove: paymentId,
