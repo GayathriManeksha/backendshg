@@ -113,6 +113,10 @@ router.post('/proposals/vote', async (req, res) => {
         }
 
         // Increment the votes for the proposal
+        await Unit.updateOne(
+            { _id: unit._id, 'proposals._id': id },
+            { $inc: { 'proposals.$.totalVotes': 1 } }
+        );
         if (vote === 1) {
             console.log("Voted yaay");
             await Unit.updateOne(
@@ -129,10 +133,57 @@ router.post('/proposals/vote', async (req, res) => {
             poll: vote,
         };
         unit.voterecords.push(voteR);
+
+        //Checking if the proposal is approved
+        // Get the proposal by its ID
+        const proposal = unit.proposals.find((p) => p._id.toString() === id.toString());
+        console.log(proposal)
+
+        if (!proposal) {
+            return res.status(404).json({ error: 'Proposal not found.' });
+        }
+
+        // Check if the proposal has already been approved
+        if (proposal.approved) {
+            res.status(400).json({ error: 'The proposal has already been approved.' });
+        }
+        else {// Get the total number of votes for the proposal
+            // const totalVotes = await Voterecord.countDocuments({ proposalId: id });
+            const totalVotes = unit.members.length;
+
+            // Calculate the majority threshold (e.g., 50% + 1 vote)
+            const majorityThreshold = Math.ceil(totalVotes / 2);
+
+            // Check if the proposal has received the majority of votes
+            if (proposal.votes >= majorityThreshold) {
+                // Update the proposal as approved
+                await Unit.updateOne(
+                    { _id: unit._id, 'proposals._id': id },
+                    { $set: { 'proposals.$.approved': true } }
+                );
+
+                // Perform other actions if needed
+
+                if (proposal.typeproposal === "Payment") {
+                    console.log(proposal.toapprove.toString())
+                    console.log("you")
+                    const approved_payment = unit.payments.find((p) => p._id.toString() === proposal.toapprove.toString());
+                    console.log(approved_payment)
+                    await Unit.updateOne(
+                        { _id: unit._id, 'payments._id': approved_payment._id },
+                        { $set: { 'payments.$.approved': true } }
+                    );
+                }
+
+                res.status(200).json({ message: 'Proposal approved and recorded successfully.' });
+            } else {
+                res.status(200).json({ message: 'Proposal did not receive the required majority of votes.' });
+            }
+        }
         // Save the vote record to the database
         await unit.save();
 
-        res.status(200).json({ message: 'Vote recorded successfully.' });
+        return res.status(200).json({ message: 'Vote recorded successfully.' });
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -198,4 +249,27 @@ router.post('/proposals/record', async (req, res) => {
     }
 });
 
+router.post('/proposals/disapproved', async (req, res) => {
+    try {
+        const userId = req.body.userID;
+        const user = await User.findOne({ id: userId }).populate('unit');
+        if (!user) {
+            return res.json({ status: false, error: 'User not found' });
+        }
+        const unit = user.unit;
+
+        const totalVotes = unit.members.length;
+
+        // Calculate the majority threshold (e.g., 50% + 1 vote)
+        const majorityThreshold = Math.ceil(totalVotes / 2);
+        console.log(unit.proposals)
+        const disproposal = unit.proposals.find(p => p.approved === false && p.totalVotes - p.votes >= majorityThreshold);
+        // Check if the proposal has received the majority of votes
+        console.log(disproposal);
+        res.json(disproposal)
+    }
+    catch (error) {
+        res.json({ error: "Error" });
+    }
+});
 module.exports = router
