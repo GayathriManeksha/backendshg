@@ -5,6 +5,7 @@ const attendanceSchema = require('./attendance');
 const ProposalSchema = require('./proposal');
 const VoterecordSchema = require('./voterecord');
 const paymentSchema = require('./payments')
+const minutesSchema=require('./minutes')
 
 const unitSchema = new mongoose.Schema({
   name: String,
@@ -23,6 +24,7 @@ const unitSchema = new mongoose.Schema({
     ref: 'User',
   },
   payments: { type: [paymentSchema] },
+  minutes: { type: [minutesSchema] }
 });
 
 const Unit = mongoose.model('Unit', unitSchema);
