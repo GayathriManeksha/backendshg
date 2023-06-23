@@ -5,10 +5,11 @@ const mongoose = require('mongoose');
 const proposalSchema = new mongoose.Schema({
     description: String,
     votes: Number,
+    totalVotes: Number,
     approved: Boolean,
     typeproposal: String,
     toapprove: mongoose.Schema.Types.ObjectId,
-    datecreated:Date,
+    datecreated: Date,
 });
 
 module.exports = proposalSchema;

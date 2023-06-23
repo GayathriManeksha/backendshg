@@ -66,4 +66,47 @@ router.post('/makepayment', async (req, res) => {
     }
 });
 
+router.post('/listpayment', async (req, res) => {
+    try {
+        const userId = req.body.userID;
+        const id = req.body.id;
+        console.log(userId)
+        const user = await User.findOne({ id: userId }).populate('unit')
+        const user2 = await User.findOne({ id: id })
+        if (!user) {
+            return res.json({ status: false, error: 'User not found' });
+        }
+        if (!user2) {
+            return res.json({ status: false, error: 'Searched User not found' });
+        }
+        const unit = user.unit;
+        if (!unit) {
+            return res.status(404).json({ error: 'Unit not found' });
+        }
+        // console.log(unit)
+        const paymentslist = unit.payments
+            .find(
+                payment => payment.user.toString() === user2._id.toString() && payment.approved === true
+            );
+        console.log(paymentslist)
+        if (paymentslist) {
+            const filteredpayments = Array.isArray(paymentslist)
+                ? paymentslist.map(p => ({
+                    date: p.date.toISOString().split('T')[0],
+                    amount: p.amount,
+                }))
+                : [{
+                    date: paymentslist.date.toISOString().split('T')[0],
+                    amount: paymentslist.amount,
+                }];
+
+            console.log(filteredpayments)
+            return res.json(filteredpayments)
+        }
+        return res.json([]);
+    }
+    catch (error) {
+        return res.json({ error: "Error" })
+    }
+})
 module.exports = router
