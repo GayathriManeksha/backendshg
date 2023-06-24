@@ -264,7 +264,7 @@ router.post('/proposals/disapproved', async (req, res) => {
         // Calculate the majority threshold (e.g., 50% + 1 vote)
         const majorityThreshold = Math.ceil(totalVotes / 2);
         console.log(unit.proposals)
-        const disproposal = unit.proposals.find(p => p.approved === false && p.totalVotes - p.votes >= majorityThreshold);
+        const disproposal = unit.proposals.filter(p => p.approved === false && p.totalVotes - p.votes >= majorityThreshold);
         // Check if the proposal has received the majority of votes
         console.log(disproposal);
         res.json(disproposal)
