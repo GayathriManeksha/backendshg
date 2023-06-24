@@ -275,12 +275,11 @@ router.post('/proposals/disapproved', async (req, res) => {
 });
 
 router.post('/deleteproposal', async (req, res) => {
-    const userId = req.body.userId;
-    const description = req.body.description;
-    const proposalId = req.body.proposalId;
-
     try {
         // Find the user and populate the 'unit' field
+        const userId = req.body.userId;
+        // const description = req.body.description;
+        const proposalId = req.body.proposalId;
         const user = await User.findOne({ id: userId }).populate('unit');
 
         if (!user) {
@@ -295,23 +294,22 @@ router.post('/deleteproposal', async (req, res) => {
         }
 
         // Find the proposal within the unit and update/delete it
-        const proposalIndex = unit.proposals.findIndex((proposal) => proposal._id.toString() === proposalId);
+        const proposalIndex = unit.proposals.findIndex((proposal) => proposal._id.toString() === proposalId.toString());
 
         if (proposalIndex === -1) {
             return res.status(404).json({ message: 'Proposal not found' });
         }
         const newProposal = {
-            description,
+            description: unit.proposals[proposalIndex].description,
             votes: 0,
             totalVotes: 0,
             approved: false,
-            typeproposal: typeprop,
-            toapprove: propid,
+            typeproposal: unit.proposals[proposalIndex].typeproposal,
+            toapprove: unit.proposals[proposalIndex].toapprove,
             datecreated: new Date(),
         };
-
         unit.proposals.splice(proposalIndex, 1);
-
+        unit.proposals.push(newProposal);
 
         // Save the updated unit
         await unit.save();
